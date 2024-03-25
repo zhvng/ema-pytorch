@@ -206,6 +206,7 @@ class KarrasEMA(Module):
 
         copy, lerp = self.inplace_copy, self.inplace_lerp
         current_decay = self.beta
+        lerp_weight = 1. - current_decay ** self.update_every
 
         for (name, current_params), (_, ma_params) in zip(self.get_params_iter(current_model), self.get_params_iter(ma_model)):
             if name in self.ignore_names:
@@ -218,7 +219,7 @@ class KarrasEMA(Module):
                 copy(ma_params.data, current_params.data)
                 continue
 
-            lerp(ma_params.data, current_params.data, 1. - current_decay)
+            lerp(ma_params.data, current_params.data, lerp_weight)
 
         for (name, current_buffer), (_, ma_buffer) in zip(self.get_buffers_iter(current_model), self.get_buffers_iter(ma_model)):
             if name in self.ignore_names:
@@ -231,7 +232,7 @@ class KarrasEMA(Module):
                 copy(ma_buffer.data, current_buffer.data)
                 continue
 
-            lerp(ma_buffer.data, current_buffer.data, 1. - current_decay)
+            lerp(ma_buffer.data, current_buffer.data, lerp_weight)
 
     def __call__(self, *args, **kwargs):
         return self.ema_model(*args, **kwargs)
